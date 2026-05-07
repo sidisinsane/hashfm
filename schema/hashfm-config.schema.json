@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/sidisinsane/hashfm/main/schema/hashfm-config.schema.json",
+  "$comment": "Schema version: 1.0.0 | Last updated: 2026-05-07",
+  "title": "hashfm Configuration",
+  "description": "The shared .hashfm config file used by hashfm-compatible tools. Each tool owns a top-level namespace.",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "The version of the hashfm convention used in this project."
+    },
+    "project": {
+      "type": "object",
+      "description": "Project metadata.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the project."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the project."
+        }
+      },
+      "required": ["name"],
+      "additionalProperties": true
+    },
+    "hashfm-agent": {
+      "description": "Settings for the hashfm-agent tool.",
+      "$ref": "https://raw.githubusercontent.com/sidisinsane/hashfm-agent/main/schema/hashfm-agent-config.schema.json"
+    }
+  },
+  "additionalProperties": true
+}
