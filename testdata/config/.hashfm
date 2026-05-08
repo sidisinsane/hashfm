@@ -1,0 +1,8 @@
+version: "1.0"
+project:
+  name: test-project
+  description: A test project
+hashfm-agent:
+  generate:
+    format: tsv
+    output: index.tsv

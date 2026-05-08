@@ -1,0 +1,6 @@
+version: "1.0"
+project:
+  description: Missing name
+hashfm-agent:
+  generate:
+    format: tsv

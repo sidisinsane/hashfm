@@ -1,0 +1,5 @@
+version: "1.0"
+project:
+  name: test-project-yaml
+hashfm-test:
+  custom: value
