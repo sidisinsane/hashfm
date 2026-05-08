@@ -5,10 +5,11 @@ hashfm – hash + frontmatter.
 
 ---
 
-## What is hashfm?
+## What Is Hashfm?
 
-`hashfm` is a minimal shell comment convention for placing structured YAML
-inside script files. It defines only the delimiter syntax and content format.
+`hashfm` is a minimal shell comment convention for placing structured YAML inside
+script files. It defines only the delimiter syntax and content format.
+
 Field definitions are left to implementations.
 
 ---
@@ -23,17 +24,19 @@ The hashfm opens and closes with:
 # ---
 ```
 
-### Line prefix
+Both delimiters must appear on their own line.
+
+### Line Prefix
 
 Every line inside the hashfm is prefixed with `# ` (hash followed by a single
-space). The canonical prefix is `# `. Parsers should be tolerant of additional
+space). The canonical prefix is `# `.  Parsers should be tolerant of additional
 spaces after the hash.
 
 ### Content
 
-Content between the delimiters is YAML. Any valid YAML structure is permitted —
-scalars, mappings, sequences, or a sequence of mappings. The specific structure
-is defined by the implementation.
+Content between the delimiters is YAML. Any valid YAML structure is permitted
+— scalars, mappings, sequences, or a sequence of mappings. The specific
+structure is defined by the implementation.
 
 ### Example
 
@@ -70,14 +73,20 @@ An implementation of `hashfm` defines:
 - Validation rules for field values
 - What is produced from a parsed hashfm
 
-An implementation must document its field schema separately. It must not redefine the delimiter syntax.
+An implementation must document its field schema separately. It must not redefine
+the delimiter syntax.
 
----
-
-## Naming
-
-Implementations should be named using the pattern `hashfm-*`, making their relationship to the base convention explicit.
+Implementations should be named using the pattern `hashfm-*`, making their
+relationship to the base convention explicit.
 
 Examples:
 
 - `hashfm-agent` — an implementation for script discovery and indexing
+
+---
+
+## Config File
+
+`hashfm` tools share a single `.hashfm` config file at the project root for
+persistent settings. See [`CONFIG.md`](CONFIG.md) for the full specification —
+including supported filenames, schema, validation, and resolution order.

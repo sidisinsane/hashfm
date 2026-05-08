@@ -19,8 +19,10 @@ A `hashfm` is a YAML payload delimited by `# ---` inside a shell script:
 ```bash
 #!/usr/bin/env bash
 # ---
-# name: deploy
-# description: Deploy the application to staging
+# key: value
+# list:
+#   - item one
+#   - item two
 # ---
 ```
 
@@ -37,33 +39,49 @@ fully executable by any shell.
 
 ---
 
-## The `.hashfm` Config File
+## Public API
 
-Separately, `hashfm` tools share a single `.hashfm` config file at the project
-root. Each tool owns a top-level namespace:
+The `hashfm` package exposes two functions for implementations:
 
-```yaml
-version: "1.0"
-project:
-  name: "my-project"
+| Function | Purpose |
+|---|---|
+| `Extract(source string) (string, error)` | Reads a shell script and returns the YAML content of the first hashfm block. Returns an empty string if no block is found. |
+| `LoadConfig() (map[string]interface{}, error)` | Finds and loads the config file from the current directory. Returns `nil` if no config file is found. Validates against the core schema. |
 
-hashfm-agent:
-  generate:
-    format: tsv
-    recursive: true
+```go
+import "github.com/sidisinsane/hashfm"
+
+// Extract the hashfm block from a script.
+yamlContent, err := hashfm.Extract(scriptSource)
+
+// Load the config file.
+cfg, err := hashfm.LoadConfig()
 ```
-
-This keeps configuration unified — one file, all tools.
 
 ---
 
-## Block vs Config
+## Configuration
 
-| | hashfm | Config |
-|---|---|---|
-| **Location** | Inside script files | Project root (`.hashfm`) |
-| **Owned by** | The script itself | Each tool owns its namespace |
-| **Purpose** | Script metadata | Tool settings |
+`hashfm` tools share a single `.hashfm` config file at the project root for
+persistent settings. It is a YAML document with top-level keys as namespaces.
+
+The core schema defines the envelope (`version`, `project`) and allows
+tool-specific namespaces under the `hashfm-*` naming convention. Each tool
+validates its own namespace. No tool registry is needed.
+
+See [`CONFIG.md`](CONFIG.md) for the full specification — supported filenames,
+schema, validation, and resolution order.
+
+The config file schema lives in [`schema/hashfm-config.schema.json`](schema/hashfm-config.schema.json).
+
+---
+
+## Documentation
+
+| Document | What it covers |
+|----------|---------------|
+| `spec.md` | Syntax, rules, and naming convention |
+| [`CONFIG.md`](CONFIG.md) | `.hashfm` config file design and implementation |
 
 ---
 
@@ -73,30 +91,8 @@ This keeps configuration unified — one file, all tools.
 |------|-------------|
 | [hashfm-agent](https://github.com/sidisinsane/hashfm-agent) | Extracts hashfms from scripts and produces a machine-readable index |
 
----
-
-## Go Package
-
-```bash
-go get github.com/sidisinsane/hashfm
-```
-
-```go
-import "github.com/sidisinsane/hashfm"
-
-// Extract reads a shell script source and returns its hashfm.
-yamlContent, err := hashfm.Extract(scriptSource)
-```
-
-`hashfm.Extract` returns the cleaned YAML content from the first `# ---` block,
-or an empty string if no hashfm is found.
-
----
-
-## Schema
-
-The hashfm syntax itself has no required fields — field definitions are left to
-implementations. The `.hashfm` config file schema is in `schema/`.
+Implementations should be named using the pattern `hashfm-*`, making their
+relationship to the base convention explicit.
 
 ---
 
@@ -104,7 +100,7 @@ implementations. The `.hashfm` config file schema is in `schema/`.
 
 ### Prerequisites
 
-- Go 1.26+
+- Go 1.26.2
 - [golangci-lint](https://golangci-lint.run) — for Go linting
 - [lefthook](https://lefthook.dev) — for pre-commit hooks
 
