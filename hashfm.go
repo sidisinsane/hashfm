@@ -6,15 +6,32 @@
 package hashfm
 
 import (
+	_ "embed"
+	"encoding/json"
 	"errors"
+	"os"
 	"strings"
+
+	"github.com/xeipuuv/gojsonschema"
+	"gopkg.in/yaml.v3"
 )
+
+// configFileCandidates lists the config filenames to probe, in order of precedence.
+var configFileCandidates = []string{
+	".hashfm",
+	".hashfm.yml",
+	".hashfm.yaml",
+	".hashfm.json",
+}
 
 // ErrMultipleBlocks indicates that more than one hashfm was detected in the source.
 var ErrMultipleBlocks = errors.New("hashfm: multiple hashfms found")
 
 // ErrUnclosedBlock indicates that an opening `# ---` was found without a corresponding closing delimiter.
 var ErrUnclosedBlock = errors.New("hashfm: unclosed hashfm")
+
+//go:embed schema/hashfm-config.schema.json
+var ConfigSchema []byte
 
 // Extract reads the source string and returns the YAML content of the first
 // hashfm it finds. Returns an empty string if no hashfm is present.
@@ -67,7 +84,7 @@ func Extract(src string) (string, error) {
 		return "", nil
 	}
 
-	return strings.Join(yamlLines, "\n"), nil
+	return strings.TrimRight(strings.Join(yamlLines, "\n"), " \t\n"), nil
 }
 
 // stripPrefix removes the `# ` prefix (with tolerance for extra spaces).
@@ -86,4 +103,54 @@ func stripPrefix(line string) (string, bool) {
 	}
 	// Strip the first space (canonical prefix is `# `)
 	return rest[1:], true
+}
+
+// LoadConfig finds and loads a config file from the current working directory.
+// It validates the file against the hashfm config schema.
+// Returns nil if no config file is found.
+func LoadConfig() (map[string]interface{}, error) {
+	var path string
+	for _, name := range configFileCandidates {
+		if _, err := os.Stat(name); err == nil {
+			path = name
+			break
+		}
+	}
+
+	if path == "" {
+		return nil, nil
+	}
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var rawConfig map[string]interface{}
+	if strings.HasSuffix(path, ".json") {
+		if err := json.Unmarshal(data, &rawConfig); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := yaml.Unmarshal(data, &rawConfig); err != nil {
+			return nil, err
+		}
+	}
+
+	schemaLoader := gojsonschema.NewBytesLoader(ConfigSchema)
+	documentJSON, err := json.Marshal(rawConfig)
+	if err != nil {
+		return nil, err
+	}
+	documentLoader := gojsonschema.NewBytesLoader(documentJSON)
+	result, err := gojsonschema.Validate(schemaLoader, documentLoader)
+	if err != nil {
+		return nil, err
+	}
+
+	if !result.Valid() {
+		return nil, errors.New("hashfm: config file validation failed")
+	}
+
+	return rawConfig, nil
 }
