@@ -1,6 +1,6 @@
 # CI workflow — triggers on push and pull requests to main.
 #
-# Verifies module hygiene, lints, and tests the codebase.
+# Verifies module hygiene and tests the codebase.
 # Must pass before tagging a release.
 #
 # Expected structure:
