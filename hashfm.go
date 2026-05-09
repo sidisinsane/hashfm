@@ -9,6 +9,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"strings"
 
@@ -149,7 +150,11 @@ func LoadConfig() (map[string]interface{}, error) {
 	}
 
 	if !result.Valid() {
-		return nil, errors.New("hashfm: config file validation failed")
+		var errMsgs []string
+		for _, desc := range result.Errors() {
+			errMsgs = append(errMsgs, fmt.Sprintf("- %s", desc))
+		}
+		return nil, fmt.Errorf("hashfm: config validation failed:\n%s", strings.Join(errMsgs, "\n"))
 	}
 
 	return rawConfig, nil
